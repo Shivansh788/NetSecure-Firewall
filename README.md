@@ -1,25 +1,25 @@
 # NetSecure-Firewall
 minor project
 
-
-NetSecure_Firewall
-│
-├── core
-│   ├── firewall.py
-│   ├── rule_engine.py
-│   ├── ids.py
-│   ├── dpi.py
-│   ├── behavior_monitor.py
-│   ├── conflict_detector.py
-│   └── __init__.py
-│
-├── ui
-│   ├── app.py
-│   └── __init__.py
-│
-├── logs
-│   └── events.log
-│
-├── run.py
-├── requirements.txt
-└── README.md
+<br>
+NetSecure_Firewall<br>
+│<br>
+├── core<br>
+│   ├── firewall.py<br>
+│   ├── rule_engine.py<br>
+│   ├── ids.py<br>
+│   ├── dpi.py<br>
+│   ├── behavior_monitor.py<br>
+│   ├── conflict_detector.py<br>
+│   └── __init__.py<br>
+│<br>
+├── ui<br>
+│   ├── app.py<br>
+│   └── __init__.py<br>
+│<br>
+├── logs<br>
+│   └── events.log<br>
+│<br>
+├── run.py<br>
+├── requirements.txt<br>
+└── README.md<br>
