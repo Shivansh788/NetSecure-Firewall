@@ -1,5 +1,8 @@
 # NetSecure-Firewall
 minor project
+<br>
+pip install -r requirements.txt<br>
+python run.py<br>
 
 <br>
 NetSecure_Firewall<br>
