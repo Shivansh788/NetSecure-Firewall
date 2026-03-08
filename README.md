@@ -1,6 +1,9 @@
 # NetSecure-Firewall
 minor project
 <br>
+python -m venv myenv <br>
+.\myenv\Scripts\Activate.ps1<br>
+
 pip install -r requirements.txt<br>
 python run.py<br>
 
