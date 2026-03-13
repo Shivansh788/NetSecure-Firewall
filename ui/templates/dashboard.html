@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NetSecure NGFW</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+
+        .pulse-red { animation: pulse 1.5s infinite; }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+    </style>
+</head>
+
+<body class="bg-slate-950 text-slate-200">
+
+<header class="p-4 bg-slate-900 flex justify-between items-center">
+    <div class="flex items-center gap-2">
+        <div class="w-8 h-8 bg-blue-500 rounded flex items-center justify-center"></div>
+        <h1 class="text-xl font-bold tracking-tight text-white">
+            NetSecure <span class="text-blue-400">Firewall</span>
+        </h1>
+    </div>
+    <div id="timestamp" class="font-mono text-sm"></div>
+</header>
+
+<main class="p-6 space-y-6">
+
+    <!-- METRICS -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-slate-900 p-4 rounded">
+            <p class="text-xs text-slate-400">TOTAL PACKETS</p>
+            <h2 id="packetCount" class="text-2xl font-bold">0</h2>
+        </div>
+
+        <div class="bg-slate-900 p-4 rounded">
+            <p class="text-xs text-slate-400">BLOCKED IPS</p>
+            <h2 id="blockedCount" class="text-2xl font-bold text-red-400">0</h2>
+        </div>
+
+        <div class="bg-slate-900 p-4 rounded">
+            <p class="text-xs text-slate-400">TOTAL ATTACKS</p>
+            <h2 id="attackCount" class="text-2xl font-bold text-yellow-400">0</h2>
+        </div>
+
+        <div id="threatBox" class="bg-slate-900 p-4 rounded">
+            <p class="text-xs text-slate-400">THREAT LEVEL</p>
+            <h2 id="threatLevel" class="text-2xl font-bold">LOW</h2>
+        </div>
+    </div>
+
+    <!-- CHARTS -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <!-- Attack Distribution -->
+        <div class="bg-slate-900 p-4 rounded">
+            <h3 class="mb-2 text-sm font-semibold">Attack Distribution</h3>
+            <div class="relative h-48">
+                <canvas id="attackChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="bg-slate-900 p-4 rounded md:col-span-2">
+            <h3 class="mb-2 text-sm font-semibold">Attack Frequency (24h)</h3>
+            <div class="relative h-48">
+                <canvas id="timelineChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- LOGS -->
+    <div class="bg-slate-900 p-6 rounded">
+        <h3 class="mb-4 font-semibold">Live Traffic Logs</h3>
+        <div id="logs" class="h-64 overflow-y-auto font-mono text-xs space-y-1"></div>
+    </div>
+
+    <!-- RULES -->
+    <div class="bg-slate-900 p-6 rounded">
+        <h3 class="mb-4 font-semibold">Firewall Policies</h3>
+        <table class="w-full text-xs">
+            <thead>
+                <tr class="text-slate-400">
+                    <th>ID</th>
+                    <th>Source</th>
+                    <th>Dest</th>
+                    <th>Protocol</th>
+                    <th>Port</th>
+                    <th>Action</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="rulesTable"></tbody>
+        </table>
+    </div>
+
+    <!-- IPS BLOCKS -->
+    <div class="bg-slate-900 p-6 rounded">
+        <h3 class="mb-4 font-semibold">Active IPS Blocks</h3>
+        <div id="blockedList" class="space-y-2"></div>
+    </div>
+
+</main>
+
+<script>
+let attackChart;
+let timelineChart;
+
+function initCharts() {
+
+    attackChart = new Chart(document.getElementById("attackChart"), {
+        type: 'doughnut',
+        data: {
+            labels: [],
+            datasets: [{
+                data: [],
+                backgroundColor: ['#ef4444', '#3b82f6', '#a855f7', '#f59e0b'],
+                borderColor: '#0f172a',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { color: '#cbd5e1', font: { size: 10 } }
+                }
+            }
+        }
+    });
+
+    timelineChart = new Chart(document.getElementById("timelineChart"), {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [{
+                label: "Attacks",
+                data: [],
+                backgroundColor: '#3b82f6'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { labels: { color: '#cbd5e1', font: { size: 10 } } }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#cbd5e1' },
+                    grid: { color: '#1e293b' }
+                },
+                y: {
+                    ticks: { color: '#cbd5e1' },
+                    grid: { color: '#1e293b' }
+                }
+            }
+        }
+    });
+}
+
+async function loadData() {
+    const res = await fetch("/api/dashboard-data");
+    const data = await res.json();
+
+    document.getElementById("packetCount").innerText = data.packet_count;
+    document.getElementById("blockedCount").innerText = data.blocked_count;
+
+    const totalAttacks = Object.values(data.attack_stats).reduce((a, b) => a + b, 0);
+    document.getElementById("attackCount").innerText = totalAttacks;
+    document.getElementById("timestamp").innerText = data.timestamp;
+
+    document.getElementById("threatLevel").innerText = data.threat_level;
+
+    attackChart.data.labels = Object.keys(data.attack_stats);
+    attackChart.data.datasets[0].data = Object.values(data.attack_stats);
+    attackChart.update();
+
+    timelineChart.data.labels = data.timeline.labels;
+    timelineChart.data.datasets[0].data = data.timeline.values;
+    timelineChart.update();
+}
+
+initCharts();
+setInterval(loadData, 2000);
+loadData();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "source_zone": "PUBLIC",
+    "dest_zone": "INTERNAL",
+    "protocol": "TCP",
+    "port": 22,
+    "action": "DROP",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "id": 2,
+    "source_zone": "INTERNAL",
+    "dest_zone": "PUBLIC",
+    "protocol": "TCP",
+    "port": 80,
+    "action": "ALLOW",
+    "priority": 2,
+    "enabled": true
+  }
+]
