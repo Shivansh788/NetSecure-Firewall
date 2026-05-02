@@ -1,32 +1,21 @@
+# core/firewall.py
+
 import logging
 import time
 import random
 from scapy.all import sniff, IP, TCP, UDP
 
 from core.rule_engine import match_rule
-from core.ids import detect, block_ip, is_blocked
-from core.behavior_monitor import monitor_traffic
+from core.ids import detect
+from core.behavior_monitor import monitor_traffic, is_rate_limited
 from core.dpi import inspect
 
-# =========================================
-# GEO BLOCKING SIMULATION
-# =========================================
-
-GEO_BLOCKED_RANGES = [
-    "10.",  # Example simulated country
-    "172.16.",  # Example simulated country
-]
-
-
-def is_geo_blocked(ip):
-    for prefix in GEO_BLOCKED_RANGES:
-        if ip.startswith(prefix):
-            return True
-    return False
-
+from core.ai_analyzer import analyze_with_ai
+from core.ai_parser import parse_ai_response
+from core.ai_agent import generate_rule_from_ai
 
 # =========================================
-# LOGGING CONFIGURATION
+# CONFIG
 # =========================================
 
 logging.basicConfig(
@@ -35,167 +24,219 @@ logging.basicConfig(
     format="%(asctime)s | %(levelname)s | %(message)s",
 )
 
-# =========================================
-# IPS THREAT SCORING ENGINE
-# =========================================
-ATTACK_STATS = {}
-PACKET_COUNT = 0
-# =========================================
-# ENHANCED IPS ENGINE
-# =========================================
+BLOCK_THRESHOLD = 5
+TEMP_BLOCK_DURATION = 60
 
 THREAT_SCORES = {}
 BLOCKED_IPS = {}
+SESSION_TABLE = {}
+IP_ATTACK_HISTORY = {}
 
-BLOCK_THRESHOLD = 5
-TEMP_BLOCK_DURATION = 60  # seconds
+# =========================================
+# GEO + WHITELIST
+# =========================================
+
+GEO_BLOCKED = ["10.", "172.16."]
+WHITELIST = ["127.0.0.1"]
 
 
-def increase_threat_score(ip, amount, attack_type=None):
+def is_geo_blocked(ip):
+    return any(ip.startswith(p) for p in GEO_BLOCKED)
 
+
+def is_whitelisted(ip):
+    return ip in WHITELIST
+
+
+# =========================================
+# IPS ENGINE
+# =========================================
+
+def increase_threat_score(ip, amount, reason=None):
     THREAT_SCORES[ip] = THREAT_SCORES.get(ip, 0) + amount
 
-    # Severe attacks → permanent block
-    if attack_type in ["RCE_ATTEMPT", "DATA_EXFILTRATION"]:
-        block_ip(ip, permanent=True, reason=attack_type)
-        return
-
     if THREAT_SCORES[ip] >= BLOCK_THRESHOLD:
-        block_ip(
-            ip,
-            src_ip=ip,
-            dst_ip="TARGET_SERVER",
-            port="UNKNOWN",
-            permanent=False,
-            reason=attack_type,
-        )
+        block_ip(ip, reason)
 
 
-def block_ip(ip, src_ip=None, dst_ip=None, port=None, permanent=False, reason=None):
-
+def block_ip(ip, reason=None):
     BLOCKED_IPS[ip] = {
-        "blocked_at": time.time(),
-        "permanent": permanent,
+        "time": time.time(),
         "reason": reason,
     }
-
-    if permanent:
-        logging.critical(f"[IPS] PERMANENT BLOCK: {ip} | Reason: {reason}")
-    else:
-        logging.critical(f"[IPS] TEMP BLOCK: {ip} | Reason: {reason}")
-
-    # Simulate connection reset if connection info available
-    if src_ip and dst_ip and port:
-        reset_connection(src_ip, dst_ip, port)
-
-
-def reset_connection(src_ip, dst_ip, port):
-    logging.warning(f"[IPS] CONNECTION RESET sent to {src_ip} → {dst_ip} | Port {port}")
+    logging.critical(f"[BLOCKED] {ip} | Reason: {reason}")
 
 
 def is_blocked(ip):
-
     if ip not in BLOCKED_IPS:
         return False
 
-    block_info = BLOCKED_IPS[ip]
-
-    if block_info["permanent"]:
-        return True
-
-    # Auto-unblock after timeout
-    if time.time() - block_info["blocked_at"] > TEMP_BLOCK_DURATION:
+    if time.time() - BLOCKED_IPS[ip]["time"] > TEMP_BLOCK_DURATION:
         del BLOCKED_IPS[ip]
-        logging.info(f"[IPS] AUTO-UNBLOCKED {ip}")
+        logging.info(f"[UNBLOCKED] {ip}")
         return False
 
     return True
 
 
 # =========================================
-# BASIC STATEFUL SESSION TABLE
+# SESSION TRACKING
 # =========================================
 
-SESSION_TABLE = {}
+def update_session(src, dst, port):
+    key = (src, dst, port)
+    SESSION_TABLE[key] = SESSION_TABLE.get(key, "NEW")
 
 
-def update_session(src_ip, dst_ip, port):
-    session_key = (src_ip, dst_ip, port)
+# =========================================
+# ATTACK HISTORY
+# =========================================
 
-    if session_key not in SESSION_TABLE:
-        SESSION_TABLE[session_key] = "NEW"
+def record_attack(ip, attack):
+    if ip not in IP_ATTACK_HISTORY:
+        IP_ATTACK_HISTORY[ip] = []
+    IP_ATTACK_HISTORY[ip].append(attack)
+
+
+# =========================================
+# AI DECISION + AGENT
+# =========================================
+
+def ai_decision(payload, src_ip):
+    ai_raw = analyze_with_ai(payload)
+    ai_result = parse_ai_response(ai_raw)
+
+    logging.warning(f"[AI] {ai_result}")
+
+    severity = ai_result.get("severity", "LOW")
+    confidence = int(ai_result.get("confidence", 50))
+
+    # 🔥 Agent creates rules
+    agent_msg = generate_rule_from_ai(ai_result, src_ip)
+    logging.info(agent_msg)
+
+    # 🔥 Explainable AI log
+    logging.info(
+        f"[AI EXPLAIN] IP={src_ip} | "
+        f"Attack={ai_result.get('attack_type')} | "
+        f"Confidence={confidence} | "
+        f"Reason={ai_result.get('reason')}"
+    )
+
+    # 🔥 Decision layer
+    if severity == "HIGH" and confidence >= 80:
+        block_ip(src_ip, "AI_HIGH_CONFIDENCE")
+
+    elif severity == "HIGH":
+        increase_threat_score(src_ip, 3, "AI_HIGH")
+
+    elif severity == "MEDIUM":
+        increase_threat_score(src_ip, 2, "AI_MEDIUM")
+
     else:
-        SESSION_TABLE[session_key] = "ESTABLISHED"
+        increase_threat_score(src_ip, 1, "AI_LOW")
+
+
+# =========================================
+# THREAT LEVEL
+# =========================================
+
+def get_threat_level(ip):
+    score = THREAT_SCORES.get(ip, 0)
+
+    if score >= 7:
+        return "CRITICAL"
+    elif score >= 4:
+        return "HIGH"
+    elif score >= 2:
+        return "MEDIUM"
+    return "LOW"
 
 
 # =========================================
 # CORE PACKET PROCESSING
 # =========================================
 
-
 def process_packet_data(src_ip, dst_ip, protocol, port, payload="", tcp_flags=None):
-    global PACKET_COUNT
-    PACKET_COUNT += 1
 
-    # Geo-block check
+    # 0️⃣ WHITELIST
+    if is_whitelisted(src_ip):
+        logging.info(f"[WHITELIST] {src_ip}")
+        return
+
+    # 1️⃣ GEO BLOCK
     if is_geo_blocked(src_ip):
-        logging.critical(f"[GEO BLOCK] Traffic blocked from {src_ip}")
+        logging.critical(f"[GEO BLOCK] {src_ip}")
         return
 
-    # Already blocked
+    # 2️⃣ BLOCK CHECK
     if is_blocked(src_ip):
-        logging.warning(f"[BLOCKED TRAFFIC] from {src_ip}")
+        logging.warning(f"[BLOCKED TRAFFIC] {src_ip}")
         return
 
-    # Update session (stateful)
     update_session(src_ip, dst_ip, port)
 
     # ---------------------------
-    # 1️⃣ IDS Detection FIRST
+    # 3️⃣ RATE LIMIT
+    # ---------------------------
+    if is_rate_limited(src_ip):
+        logging.warning(f"[RATE LIMIT] {src_ip}")
+        increase_threat_score(src_ip, 3, "RATE_LIMIT")
+
+    # ---------------------------
+    # 4️⃣ IDS
     # ---------------------------
     ids_alert = detect(src_ip, port, payload, tcp_flags)
 
     if ids_alert:
-        logging.warning(f"[IDS ALERT] {ids_alert} from {src_ip}")
-        ATTACK_STATS[ids_alert] = ATTACK_STATS.get(ids_alert, 0) + 1
+        logging.warning(f"[IDS] {ids_alert} from {src_ip}")
+        record_attack(src_ip, ids_alert)
         increase_threat_score(src_ip, 2, ids_alert)
 
     # ---------------------------
-    # 2️⃣ DPI Detection SECOND
+    # 5️⃣ DPI
     # ---------------------------
     dpi_alert = inspect(payload)
 
     if dpi_alert:
-        logging.warning(f"[DPI ALERT] {dpi_alert} from {src_ip}")
-        ATTACK_STATS[dpi_alert] = ATTACK_STATS.get(dpi_alert, 0) + 1
+        logging.warning(f"[DPI] {dpi_alert} from {src_ip}")
+        record_attack(src_ip, dpi_alert)
         increase_threat_score(src_ip, 3, dpi_alert)
 
-    # ---------------------------
-    # 3️⃣ Behavioral Monitoring
-    # ---------------------------
-    anomaly = monitor_traffic(src_ip)
-
-    if anomaly:
-        logging.warning(f"[ANOMALY DETECTED] from {src_ip}")
-        increase_threat_score(src_ip, 1)
+        # 🔥 AI layer
+        ai_decision(payload, src_ip)
 
     # ---------------------------
-    # 4️⃣ THEN Firewall Rule Engine
+    # 6️⃣ BEHAVIOR
+    # ---------------------------
+    behavior_alert = monitor_traffic(src_ip, port, payload)
+
+    if behavior_alert:
+        logging.warning(f"[BEHAVIOR] {behavior_alert} from {src_ip}")
+        increase_threat_score(src_ip, 1, behavior_alert)
+
+    # ---------------------------
+    # 7️⃣ FIREWALL RULE ENGINE
     # ---------------------------
     action = match_rule(src_ip, dst_ip, protocol, port)
 
     if action == "DROP":
-        logging.warning(f"[FIREWALL DROP] {src_ip} → {dst_ip} | Port {port}")
-        increase_threat_score(src_ip, 3, "FIREWALL_POLICY_VIOLATION")
+        logging.warning(f"[DROP] {src_ip} → {dst_ip}")
+        increase_threat_score(src_ip, 3, "POLICY")
         return
 
-    logging.info(f"[ALLOWED] {src_ip} → {dst_ip} | Port {port}")
+    logging.info(f"[ALLOW] {src_ip} → {dst_ip}")
+
+    # ---------------------------
+    # FINAL THREAT LEVEL
+    # ---------------------------
+    level = get_threat_level(src_ip)
+    logging.info(f"[THREAT LEVEL] {src_ip} → {level}")
 
 
 # =========================================
-# REAL PACKET MODE (Linux)
+# REAL MODE
 # =========================================
-
 
 def process_real_packet(packet):
 
@@ -229,56 +270,43 @@ def process_real_packet(packet):
 
 
 # =========================================
-# SIMULATION MODE (Windows Safe)
+# SIMULATION
 # =========================================
-
 
 def run_simulation():
 
-    print("⚡ Running in Simulation Mode")
+    print("⚡ Simulation Mode Started")
 
-    test_ips = [
-        "192.168.10.5",
-        "192.168.10.6",
-        "192.168.10.7",
-    ]
+    test_ips = ["192.168.1.10", "192.168.1.20"]
+    dst_ip = "192.168.1.1"
 
-    dst_ip = "192.168.20.10"
-
-    test_payloads = [
-        "normal traffic",
+    payloads = [
+        "normal",
         "SELECT * FROM users WHERE id=1 OR 1=1",
         "<script>alert('xss')</script>",
         "../etc/passwd",
-        "login login login login login",
-        "A" * 6000,  # simulate data exfiltration
+        "A" * 5000
     ]
 
     while True:
-
-        src_ip = random.choice(test_ips)
-        port = random.choice([22, 80, 443])
-        payload = random.choice(test_payloads)
-
-        # Simulate TCP flags
-        tcp_flags = random.choice(["S", None, None, None])
-
-        process_packet_data(src_ip, dst_ip, "TCP", port, payload, tcp_flags)
-
+        process_packet_data(
+            random.choice(test_ips),
+            dst_ip,
+            "TCP",
+            random.choice([80, 443]),
+            random.choice(payloads)
+        )
         time.sleep(2)
 
 
 # =========================================
-# FIREWALL STARTER
+# START
 # =========================================
 
-
 def start_firewall(mode="sim"):
-
-    print("🔥 NetSecure Advanced NGFW Started")
+    print("🔥 NetSecure AI Firewall Started")
 
     if mode == "real":
-        print("🟢 Running in Real Packet Mode")
         sniff(prn=process_real_packet, store=0)
     else:
         run_simulation()
