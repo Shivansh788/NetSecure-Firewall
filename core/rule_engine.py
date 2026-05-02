@@ -1,8 +1,16 @@
-from core.conflict_detector import detect_conflicts
+# core/rule_engine.py
+
 import logging
 import ipaddress
 import json
+import time
+from core.conflict_detector import detect_conflicts
 
+# =========================================
+# CONFIG
+# =========================================
+
+RULES_FILE = "config/rules.json"
 
 ZONES = {
     "PUBLIC": ipaddress.IPv4Network("192.168.10.0/24"),
@@ -10,31 +18,55 @@ ZONES = {
     "RESTRICTED": ipaddress.IPv4Network("192.168.20.100/32"),
 }
 
-RULES_FILE = "config/rules.json"
+RULE_CACHE = []
+LAST_LOADED = 0
+CACHE_TTL = 5
 
+
+# =========================================
+# LOAD RULES (CACHED)
+# =========================================
 
 def load_rules():
-    with open(RULES_FILE, "r") as f:
-        rules = json.load(f)
+    global RULE_CACHE, LAST_LOADED
 
-    rules = sorted(rules, key=lambda r: r["priority"])
+    if time.time() - LAST_LOADED < CACHE_TTL:
+        return RULE_CACHE
 
-    # Detect conflicts
+    try:
+        with open(RULES_FILE, "r") as f:
+            rules = json.load(f)
+    except:
+        rules = []
+
+    # 🔥 remove expired rules
+    rules = [
+        r for r in rules
+        if "expires_at" not in r or r["expires_at"] > time.time()
+    ]
+
+    # sort by priority
+    rules = sorted(rules, key=lambda r: r.get("priority", 100))
+
+    # detect conflicts
     conflicts = detect_conflicts(rules)
+    for c in conflicts:
+        logging.warning(f"[RULE CONFLICT] {c[0]} vs {c[1]}")
 
-    if conflicts:
-        for c in conflicts:
-            logging.warning(
-                f"[RULE CONFLICT] Rule {c[0]} conflicts with Rule {c[1]}"
-            )
+    RULE_CACHE = rules
+    LAST_LOADED = time.time()
 
-    return rules
+    return RULE_CACHE
 
 
 def save_rules(rules):
     with open(RULES_FILE, "w") as f:
         json.dump(rules, f, indent=4)
 
+
+# =========================================
+# ZONE DETECTION
+# =========================================
 
 def get_zone(ip):
     ip_obj = ipaddress.IPv4Address(ip)
@@ -45,6 +77,10 @@ def get_zone(ip):
 
     return "UNKNOWN"
 
+
+# =========================================
+# MATCH ENGINE
+# =========================================
 
 def match_rule(src_ip, dst_ip, protocol, port):
 
@@ -59,39 +95,63 @@ def match_rule(src_ip, dst_ip, protocol, port):
             continue
 
         if (
-            rule["source_zone"] == src_zone
-            and rule["dest_zone"] == dst_zone
-            and rule["protocol"] == protocol
-            and rule["port"] == port
+            (rule.get("source_zone") in [src_zone, "ANY"])
+            and (rule.get("dest_zone") in [dst_zone, "ANY"])
+            and (rule.get("protocol") in [protocol, "ANY"])
+            and (rule.get("port") in [port, "ANY"])
         ):
-            return rule["action"]
+            return rule.get("action", "DROP")
 
-    # Zero Trust Default Deny
-    return "DROP"
+    return "DROP"  # Zero Trust
 
 
 # =========================================
-# DYNAMIC RULE MANAGEMENT FUNCTIONS
+# RULE MANAGEMENT
 # =========================================
-
 
 def add_rule(rule):
     rules = load_rules()
+    rule["id"] = int(time.time() * 1000)
+
     rules.append(rule)
     save_rules(rules)
+
+    logging.info(f"[RULE ADDED] {rule}")
 
 
 def remove_rule(rule_id):
     rules = load_rules()
-    rules = [r for r in rules if r["id"] != rule_id]
+    rules = [r for r in rules if r.get("id") != rule_id]
     save_rules(rules)
 
+    logging.info(f"[RULE REMOVED] {rule_id}")
 
-def toggle_rule(rule_id, status):
+
+# =========================================
+# 🔥 AI RULE CREATION (CORE FEATURE)
+# =========================================
+
+def add_ai_rule(src_ip, action="DROP", reason="AI_DETECTED", ttl=300):
+
+    rule = {
+        "id": int(time.time() * 1000),
+        "source_zone": get_zone(src_ip),
+        "dest_zone": "ANY",
+        "protocol": "ANY",
+        "port": "ANY",
+        "action": action,
+        "priority": 1,
+        "enabled": True,
+        "reason": reason,
+        "created_by": "AI_AGENT",
+        "created_at": time.time(),
+        "expires_at": time.time() + ttl
+    }
+
     rules = load_rules()
-
-    for rule in rules:
-        if rule["id"] == rule_id:
-            rule["enabled"] = status
-
+    rules.append(rule)
     save_rules(rules)
+
+    logging.critical(f"[AI RULE] {rule}")
+
+    return rule
