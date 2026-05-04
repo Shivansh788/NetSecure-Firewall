@@ -14,14 +14,14 @@ def detect_conflicts(rules):
 
             # Same matching conditions
             if (
-                r1["source_zone"] == r2["source_zone"]
-                and r1["dest_zone"] == r2["dest_zone"]
-                and r1["protocol"] == r2["protocol"]
-                and r1["port"] == r2["port"]
+                r1.get("source_zone") == r2.get("source_zone")
+                and r1.get("dest_zone") == r2.get("dest_zone")
+                and r1.get("protocol") == r2.get("protocol")
+                and r1.get("port") == r2.get("port")
             ):
 
                 # Different actions = conflict
-                if r1["action"] != r2["action"]:
-                    conflicts.append((r1["id"], r2["id"]))
+                if r1.get("action") != r2.get("action"):
+                    conflicts.append((r1.get("id"), r2.get("id")))
 
     return conflicts

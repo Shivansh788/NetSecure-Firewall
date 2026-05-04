@@ -131,27 +131,60 @@ def remove_rule(rule_id):
 # 🔥 AI RULE CREATION (CORE FEATURE)
 # =========================================
 
-def add_ai_rule(src_ip, action="DROP", reason="AI_DETECTED", ttl=300):
+def add_ai_rule(src_ip, action, reason, ttl):
 
-    rule = {
+    rules = load_rules()
+
+    # 🔥 Prevent duplicate rules
+    for rule in rules:
+        if (
+            str(rule.get("source")) == str(src_ip)
+            and str(rule.get("reason")) == str(reason)
+        ):
+            return rule  # Already exists
+
+    new_rule = {
         "id": int(time.time() * 1000),
+        "source": src_ip,
+        "destination": "ANY",
+
+        # 🔥 ADD THESE (FIX CRASH)
         "source_zone": get_zone(src_ip),
         "dest_zone": "ANY",
+
         "protocol": "ANY",
         "port": "ANY",
         "action": action,
-        "priority": 1,
-        "enabled": True,
         "reason": reason,
-        "created_by": "AI_AGENT",
+        "enabled": True,
         "created_at": time.time(),
-        "expires_at": time.time() + ttl
+        "ttl": ttl
     }
+    
 
-    rules = load_rules()
-    rules.append(rule)
+    rules.append(new_rule)
     save_rules(rules)
 
-    logging.critical(f"[AI RULE] {rule}")
+    return new_rule
 
-    return rule
+def clean_duplicate_rules():
+    rules = load_rules()
+    seen = set()
+    unique = []
+
+    for r in rules:
+        if r.get("source"):  
+            key = (r.get("source"), r.get("reason"))   # AI rules
+        else:
+            key = (
+                r.get("source_zone"),
+                r.get("dest_zone"),
+                r.get("protocol"),
+                r.get("port")
+    )   # Manual rules
+
+        if key not in seen:
+            seen.add(key)
+            unique.append(r)
+
+    save_rules(unique)

@@ -8,7 +8,7 @@ from core.rule_engine import add_ai_rule
 # =========================================
 
 ATTACK_FREQUENCY = {}
-GENERATED_RULES = set()
+GENERATED_RULES = {}
 
 FREQUENCY_THRESHOLD = 3
 CONFIDENCE_THRESHOLD = 80
@@ -21,21 +21,30 @@ def update_attack_frequency(ip):
 def get_attack_frequency(ip):
     return ATTACK_FREQUENCY.get(ip, 0)
 
+# 🔥 Prevent duplicate rules
 
 # =========================================
 # MAIN AGENT FUNCTION
 # =========================================
 
 def generate_rule_from_ai(ai_result, src_ip):
-    """
-    Agentic Logic:
-    - Uses AI output
-    - Considers history
-    - Creates adaptive rules
-    - Avoids duplicates
-    """
 
-    attack = ai_result.get("attack_type", "UNKNOWN")
+    attack = ai_result.get("attack_type", "").upper()
+
+    # 🔥 NORMALIZE ATTACK NAMES (CRITICAL FIX)
+    if attack in ["SQL", "SQLI"]:
+        attack = "SQL_INJECTION"
+
+    elif attack in ["DOS", "FLOOD"]:
+        attack = "DDOS"
+
+    elif attack in ["TRAVERSAL", "PATH"]:
+        attack = "PATH_TRAVERSAL"
+
+    # ❌ Ignore garbage
+    if not attack or attack in ["UNKNOWN", "BENIGN"]:
+        return "[AI AGENT] Ignored non-malicious traffic"
+
     severity = ai_result.get("severity", "LOW")
     confidence = int(ai_result.get("confidence", 50))
 
@@ -44,8 +53,9 @@ def generate_rule_from_ai(ai_result, src_ip):
 
     rule_key = f"{src_ip}-{attack}"
 
+    # ✅ 🔥 FIX: DUPLICATE CHECK (INSIDE FUNCTION)
     if rule_key in GENERATED_RULES:
-        return f"[AI AGENT] Rule already exists for {src_ip} ({attack})"
+        return "[AI AGENT] Duplicate rule skipped"
 
     # =========================================
     # 🎯 DECISION LOGIC
@@ -55,19 +65,15 @@ def generate_rule_from_ai(ai_result, src_ip):
     ttl = 300
     reason = attack
 
-    # 🔥 repeated attacker → strict
     if freq >= FREQUENCY_THRESHOLD:
         action = "DROP"
-        reason = f"REPEATED_{attack}"
         ttl = 600
 
-    # 🔥 high severity + high confidence
     elif severity == "HIGH" and confidence >= CONFIDENCE_THRESHOLD:
         action = "DROP"
         ttl = 300
 
-    # 🔥 medium severity → temporary monitor
-    elif severity == "MEDIUM":
+    elif severity in ["MEDIUM", "HIGH"]:
         action = "DROP"
         ttl = 120
 
@@ -75,7 +81,7 @@ def generate_rule_from_ai(ai_result, src_ip):
         return "[AI AGENT] No rule created (low risk)"
 
     # =========================================
-    # 🚀 APPLY RULE (via rule engine)
+    # 🚀 APPLY RULE
     # =========================================
 
     try:
@@ -86,7 +92,7 @@ def generate_rule_from_ai(ai_result, src_ip):
             ttl=ttl
         )
 
-        GENERATED_RULES.add(rule_key)
+        GENERATED_RULES[rule_key] = time.time()
 
         return (
             f"[AI AGENT] Rule applied | IP={src_ip} | "

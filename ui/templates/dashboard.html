@@ -1,204 +1,908 @@
 <!DOCTYPE html>
+
 <html class="dark" lang="en">
 
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NetSecure NGFW</title>
-
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>NetSecure Firewall Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
 
-        .pulse-red { animation: pulse 1.5s infinite; }
+        .glass-panel {
+            background: rgba(12, 19, 36, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
 
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        .glow-accent {
+            box-shadow: 0 0 15px -3px rgba(0, 240, 255, 0.3);
+        }
+
+        .scanline {
+            background: linear-gradient(to bottom, transparent 50%, rgba(0, 240, 255, 0.02) 50%);
+            background-size: 100% 4px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 240, 255, 0.2);
+            border-radius: 10px;
         }
     </style>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface-variant": "#b9cacb",
+                        "surface-container-low": "#151b2d",
+                        "surface-container-high": "#23293c",
+                        "on-tertiary-container": "#c0002b",
+                        "tertiary-fixed-dim": "#ffb3b2",
+                        "tertiary": "#fff4f3",
+                        "tertiary-fixed": "#ffdad8",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-highest": "#2e3447",
+                        "on-tertiary-fixed": "#410008",
+                        "primary-fixed-dim": "#00dbe9",
+                        "surface-variant": "#2e3447",
+                        "primary-fixed": "#7df4ff",
+                        "on-background": "#dce1fb",
+                        "inverse-on-surface": "#2a3043",
+                        "surface-container-lowest": "#070d1f",
+                        "inverse-surface": "#dce1fb",
+                        "surface-tint": "#00dbe9",
+                        "on-secondary": "#4b007e",
+                        "secondary-fixed": "#f1daff",
+                        "outline": "#849495",
+                        "on-primary-fixed-variant": "#004f54",
+                        "surface-bright": "#33394c",
+                        "on-error": "#690005",
+                        "surface": "#0c1324",
+                        "outline-variant": "#3b494b",
+                        "on-tertiary": "#680012",
+                        "surface-dim": "#0c1324",
+                        "on-secondary-fixed-variant": "#6b00b0",
+                        "tertiary-container": "#ffcecc",
+                        "background": "#0c1324",
+                        "primary": "#dbfcff",
+                        "on-surface": "#dce1fb",
+                        "error": "#ffb4ab",
+                        "primary-container": "#00f0ff",
+                        "secondary-container": "#9d05ff",
+                        "on-secondary-fixed": "#2d004f",
+                        "on-tertiary-fixed-variant": "#92001e",
+                        "on-primary-container": "#006970",
+                        "secondary-fixed-dim": "#dfb7ff",
+                        "error-container": "#93000a",
+                        "inverse-primary": "#006970",
+                        "on-secondary-container": "#f7e6ff",
+                        "on-primary-fixed": "#002022",
+                        "on-primary": "#00363a",
+                        "surface-container": "#191f31",
+                        "secondary": "#dfb7ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xl": "40px",
+                        "gutter": "20px",
+                        "xs": "4px",
+                        "md": "16px",
+                        "margin": "32px",
+                        "sm": "8px",
+                        "lg": "24px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Space Grotesk"],
+                        "body-sm": ["Inter"],
+                        "terminal-code": ["monospace"],
+                        "h1-tech": ["Space Grotesk"],
+                        "display-bold": ["Space Grotesk"],
+                        "h2-tech": ["Space Grotesk"],
+                        "body-ui": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["12px", { "lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "terminal-code": ["13px", { "lineHeight": "1.4", "fontWeight": "400" }],
+                        "h1-tech": ["32px", { "lineHeight": "1.2", "letterSpacing": "0.04em", "fontWeight": "600" }],
+                        "display-bold": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "h2-tech": ["24px", { "lineHeight": "1.3", "fontWeight": "500" }],
+                        "body-ui": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
 </head>
 
-<body class="bg-slate-950 text-slate-200">
+<body class="bg-background text-on-background font-body-ui selection:bg-primary-container/30">
+    <!-- Sidebar Navigation -->
+    <!-- Main Content Area -->
+    <main class="min-h-screen relative flex flex-col">
+        <!-- Top App Bar -->
+        <header
+            class="sticky top-0 z-50 bg-slate-950/80 backdrop-blur-xl border-b border-white/10 flex justify-between items-center w-full px-6 h-16 shadow-[0_4px_20px_-5px_rgba(0,240,255,0.15)]">
+            <div class="flex items-center gap-lg">
+                <h1 class="text-xl font-black text-cyan-400 tracking-widest uppercase font-['Space_Grotesk']">NetSecure
+                    Firewall</h1>
+                <div class="h-6 w-[1px] bg-white/10"></div>
+                <div class="flex items-center gap-md">
+                    <div class="flex items-center gap-xs">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]"></span>
+                        <span class="font-label-caps text-label-caps text-cyan-400">Live</span>
+                    </div>
+                    <span id="liveTime" class="font-terminal-code text-slate-400 text-[12px]"></span>
+                </div>
+            </div>
+            <div class="flex items-center gap-lg">
+                <div
+                    class="px-md py-xs bg-red-950/40 border border-red-500/50 text-red-500 font-label-caps text-label-caps flex items-center gap-sm">
+                    <span class="material-symbols-outlined text-[16px]" data-icon="warning">warning</span>
+                    CRITICAL THREAT LEVEL
+                </div>
+                <div class="flex items-center gap-md text-slate-400">
+                    <span class="material-symbols-outlined hover:text-cyan-400 cursor-pointer transition-colors"
+                        data-icon="notifications">notifications</span>
+                    <span class="material-symbols-outlined hover:text-cyan-400 cursor-pointer transition-colors"
+                        data-icon="settings">settings</span>
+                    <span class="material-symbols-outlined hover:text-cyan-400 cursor-pointer transition-colors"
+                        data-icon="shield">shield</span>
+                </div>
+                <button
+                    class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 px-lg py-sm font-label-caps text-label-caps font-black transition-all active:scale-95 rounded-lg">
+                    Deploy AI
+                </button>
+            </div>
+        </header>
+        <div
+            class=" glass-panel p-lg rounded-xl flex justify-between items-center border border-red-500/20 bg-red-500/5">
 
-<header class="p-4 bg-slate-900 flex justify-between items-center">
-    <div class="flex items-center gap-2">
-        <div class="w-8 h-8 bg-blue-500 rounded flex items-center justify-center"></div>
-        <h1 class="text-xl font-bold tracking-tight text-white">
-            NetSecure <span class="text-blue-400">Firewall</span>
-        </h1>
-    </div>
-    <div id="timestamp" class="font-mono text-sm"></div>
-</header>
+            <div>
+                <div class="text-red-400 font-bold uppercase text-lg">Attack Simulation Console</div>
+                <div class="text-slate-400 text-lg">Trigger real-time attack scenarios</div>
+            </div>
 
-<main class="p-6 space-y-6">
+            <div class="flex gap-md">
+                <button onclick="simulate('sql')" class="bg-yellow-500/20 text-yellow-400 px-md py-sm rounded">SQL
+                    Injection</button>
+                <button onclick="simulate('xss')"
+                    class="bg-purple-500/20 text-purple-400 px-md py-sm rounded">XSS</button>
+                <button onclick="simulate('path')" class="bg-orange-500/20 text-orange-400 px-md py-sm rounded">Path
+                    Traversal</button>
+                <button onclick="simulate('dos')" class="bg-red-500/20 text-red-400 px-md py-sm rounded">DDoS</button>
+            </div>
 
-    <!-- METRICS -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="bg-slate-900 p-4 rounded">
-            <p class="text-xs text-slate-400">TOTAL PACKETS</p>
-            <h2 id="packetCount" class="text-2xl font-bold">0</h2>
         </div>
+        <!-- Dashboard Grid Content -->
+        <div class="p-lg space-y-lg flex-1">
+            <!-- Metrics Row -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-lg">
 
-        <div class="bg-slate-900 p-4 rounded">
-            <p class="text-xs text-slate-400">BLOCKED IPS</p>
-            <h2 id="blockedCount" class="text-2xl font-bold text-red-400">0</h2>
-        </div>
+                <!-- TOTAL PACKETS -->
+                <div class="glass-panel p-lg rounded-xl border-l-2 border-l-cyan-400 relative overflow-hidden group">
+                    <div
+                        class="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500">
+                        <span class="material-symbols-outlined text-[100px]">database</span>
+                    </div>
 
-        <div class="bg-slate-900 p-4 rounded">
-            <p class="text-xs text-slate-400">TOTAL ATTACKS</p>
-            <h2 id="attackCount" class="text-2xl font-bold text-yellow-400">0</h2>
-        </div>
+                    <div class="font-label-caps text-label-caps text-slate-400 mb-sm">TOTAL PACKETS</div>
 
-        <div id="threatBox" class="bg-slate-900 p-4 rounded">
-            <p class="text-xs text-slate-400">THREAT LEVEL</p>
-            <h2 id="threatLevel" class="text-2xl font-bold">LOW</h2>
-        </div>
-    </div>
+                    <!-- ✅ FIX -->
+                    <div id="packetCount" class="font-display-bold text-h1-tech text-primary tracking-tight">
+                        0 <span class="text-xs font-normal text-cyan-400">/hr</span>
+                    </div>
 
-    <!-- CHARTS -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="mt-md h-1 bg-white/5 rounded-full overflow-hidden">
+                        <div class="h-full bg-cyan-400 w-3/4 glow-accent"></div>
+                    </div>
+                </div>
 
-        <!-- Attack Distribution -->
-        <div class="bg-slate-900 p-4 rounded">
-            <h3 class="mb-2 text-sm font-semibold">Attack Distribution</h3>
-            <div class="relative h-48">
-                <canvas id="attackChart"></canvas>
+
+                <!-- BLOCKED IPS -->
+                <div class="glass-panel p-lg rounded-xl border-l-2 border-l-secondary relative overflow-hidden group">
+                    <div
+                        class="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500">
+                        <span class="material-symbols-outlined text-[100px]">block</span>
+                    </div>
+
+                    <div class="font-label-caps text-label-caps text-slate-400 mb-sm">BLOCKED IPS</div>
+
+                    <!-- ✅ FIX -->
+                    <div id="blockedCount" class="font-display-bold text-h1-tech text-secondary tracking-tight">
+                        0
+                    </div>
+
+                    <div
+                        class="mt-md flex items-center gap-xs text-secondary text-xs font-bold uppercase tracking-widest">
+                        <span class="material-symbols-outlined text-[14px]">trending_up</span>
+                        Live updates
+                    </div>
+                </div>
+
+
+                <!-- TOTAL ATTACKS -->
+                <div
+                    class="glass-panel p-lg rounded-xl border-l-2 border-l-tertiary-container relative overflow-hidden group">
+                    <div
+                        class="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500">
+                        <span class="material-symbols-outlined text-[100px]">gpp_maybe</span>
+                    </div>
+
+                    <div class="font-label-caps text-label-caps text-slate-400 mb-sm">TOTAL ATTACKS</div>
+
+                    <!-- ✅ FIX -->
+                    <div id="attackCount" class="font-display-bold text-h1-tech text-error tracking-tight">
+                        0
+                    </div>
+
+                    <div class="mt-md h-1 bg-white/5 rounded-full overflow-hidden">
+                        <div class="h-full bg-error w-1/2 shadow-[0_0_8px_#ffb4ab]"></div>
+                    </div>
+                </div>
+
+
+                <!-- THREAT LEVEL -->
+                <div
+                    class="glass-panel p-lg rounded-xl border-l-2 border-l-error bg-red-950/10 relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-gradient-to-tr from-red-500/5 to-transparent"></div>
+
+                    <div class="font-label-caps text-label-caps text-red-400 mb-sm">THREAT LEVEL</div>
+
+                    <!-- ✅ FIX -->
+                    <div id="threatLevel" class="font-display-bold text-h1-tech tracking-tight">
+                        LOW
+                    </div>
+
+                    <div class="mt-md flex items-center gap-sm">
+                        <div class="w-full flex gap-1">
+                            <div class="h-1 flex-1 bg-error"></div>
+                            <div class="h-1 flex-1 bg-error"></div>
+                            <div class="h-1 flex-1 bg-error"></div>
+                            <div class="h-1 flex-1 bg-error"></div>
+                            <div class="h-1 flex-1 bg-white/10"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <!-- Main Layout: Map and Behavioral Insights -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-lg">
+                <!-- Global Threat Map -->
+                <div class="lg:col-span-8 glass-panel rounded-xl overflow-hidden flex flex-col relative">
+                    <div class="p-lg border-b border-white/5 flex justify-between items-center">
+                        <div class="flex items-center gap-md">
+                            <span class="material-symbols-outlined text-cyan-400" data-icon="public">public</span>
+                            <h2 class="font-h2-tech text-h2-tech">Global Threat Map</h2>
+                        </div>
+                        <div class="flex gap-sm">
+
+                            <span
+                                class="bg-cyan-950/40 text-cyan-400 border border-cyan-400/30 text-[10px] px-sm py-1 font-bold rounded">SATELLITE
+                                VIEW</span>
+                        </div>
+                    </div>
+                    <div class="relative flex-1 min-h-[400px] bg-slate-900 overflow-hidden">
+                        <img class="absolute inset-0 w-full h-full object-cover opacity-30 grayscale"
+                            data-alt="A detailed digital high-tech world map showing continents with glowing cybernetic grid lines in deep navy and neon cyan. Red pulsing dots indicate cyber attack origins, with illuminated lines connecting nodes across a dark atmospheric background. The lighting is low and futuristic, creating a professional cybersecurity operations center feel."
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAMDKXZaMRuOwsdbniQfpeZGfs6-lASVr85QCeep10bou7n13nvpQ-0MJKPYvMiUIqyYukjQ0_cGQlv5uE3anW33mDvBkiq-_m5_2P-OxqDM7KlbKqkRNzKaL5y6xH00cHfBOM8WrVZcZ2gvSBwoanXockse-MJRyp13eIPYej3hAX8ABzjKCE8kb9c3dWu1bUWQq-guVWyEoBmJaHJOct6g9LGHTRxNrB5RcNyhHCf7RJbACOienEfFn8R12dd2TNkgJy69w_KGY" />
+                        <div class="absolute inset-0 scanline opacity-30 pointer-events-none"></div>
+                        <div id="threatMap" class="absolute inset-0"></div>
+                        <!-- Pulsing Markers (Simulated) -->
+                        <div class="absolute bottom-lg left-lg p-md glass-panel rounded-lg max-w-[200px]">
+
+                            <div class="text-[10px] text-slate-500 font-bold mb-xs">LATEST EVENT</div>
+
+                            <div id="latestIP" class="text-xs text-red-400 font-mono">IP: --</div>
+
+                            <div id="latestLocation" class="text-[10px] text-slate-400 uppercase">Origin: --</div>
+
+                        </div>
+                    </div>
+                </div>
+                <!-- Distribution & Insights -->
+                <div class="lg:col-span-4 flex flex-col gap-lg">
+                    <div class="glass-panel rounded-xl p-lg flex-1">
+                        <div class="flex items-center gap-md mb-lg">
+                            <span class="material-symbols-outlined text-secondary"
+                                data-icon="pie_chart">pie_chart</span>
+                            <h2 class="font-h2-tech text-h2-tech text-lg">Attack Distribution</h2>
+                        </div>
+                        <div class="flex justify-center items-center py-lg">
+                            <div class="relative w-40 h-40">
+                                <svg class="w-full h-full transform -rotate-90" viewbox="0 0 100 100">
+                                    <circle class="text-white/5" cx="50" cy="50" fill="none" r="45"
+                                        stroke="currentColor" stroke-width="8"></circle>
+                                    <circle class="text-cyan-400 glow-accent" cx="50" cy="50" fill="none" r="45"
+                                        stroke="currentColor" stroke-dasharray="283" stroke-dashoffset="70"
+                                        stroke-width="8"></circle>
+                                    <circle class="text-secondary" cx="50" cy="50" fill="none" r="45"
+                                        stroke="currentColor" stroke-dasharray="283" stroke-dashoffset="240"
+                                        stroke-width="8"></circle>
+                                    <circle class="text-error" cx="50" cy="50" fill="none" r="45" stroke="currentColor"
+                                        stroke-dasharray="283" stroke-dashoffset="270" stroke-width="8"></circle>
+                                </svg>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span id="attackTotal" class="text-h2-tech font-bold">0</span>
+                                    <span class="text-[10px] text-slate-500 font-bold uppercase">Total Events</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-sm mt-md">
+                            <div class="flex justify-between items-center text-xs">
+                                <div class="flex items-center gap-xs">
+                                    <div class="w-2 h-2 rounded-full bg-cyan-400"></div> DDoS Flood
+                                </div>
+                                <span id="ddosPercent" class="text-slate-400">0%</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs">
+                                <div class="flex items-center gap-xs">
+                                    <div class="w-2 h-2 rounded-full bg-secondary"></div> SQL Injection
+                                </div>
+                                <span id="sqlPercent" class="text-slate-400">0%</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs">
+                                <div class="flex items-center gap-xs">
+                                    <div class="w-2 h-2 rounded-full bg-error"></div> XSS
+                                </div>
+                                <span id="xssPercent" class="text-slate-400">0%</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs">
+                                <div class="flex items-center gap-xs">
+                                    <div class="w-2 h-2 rounded-full bg-error"></div> Path Traversal
+                                </div>
+                                <span id="pathPercent" class="text-slate-400">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass-panel rounded-xl p-lg flex-1">
+                        <div class="flex items-center gap-md mb-lg">
+                            <span class="material-symbols-outlined text-cyan-400" data-icon="analytics">analytics</span>
+                            <h2 class="font-h2-tech text-h2-tech text-lg">Behavioral Insights</h2>
+                        </div>
+                        <div class="space-y-lg">
+                            <div>
+                                <div class="flex justify-between text-xs font-bold uppercase mb-xs">
+                                    <span class="text-slate-400">Rate Anomalies</span>
+
+                                </div>
+                                <div class="h-2 bg-white/5 rounded-full overflow-hidden">
+                                    <div id="rateBar" class="h-full bg-cyan-400 w-[0%] glow-accent"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs font-bold uppercase mb-xs">
+                                    <span class="text-slate-400">Burst Detection</span>
+
+                                </div>
+                                <div class="h-2 bg-white/5 rounded-full overflow-hidden">
+                                    <div id="burstBar" class="h-full bg-secondary w-[0%]"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs font-bold uppercase mb-xs">
+                                    <span class="text-slate-400">Protocol Deviation</span>
+                                    <div id="protoBar" class="h-full bg-slate-500 w-[0%]"></div>
+                                </div>
+                                <div class="h-2 bg-white/5 rounded-full overflow-hidden">
+                                    <div class="h-full bg-slate-500 w-[12%]"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Sentinel AI Engine & Live Logs -->
+            <div class=" grid-cols-1 lg:grid-cols-12 gap-lg">
+                <!-- Sentinel AI Engine -->
+                <div
+                    class="lg:col-span-5 glass-panel rounded-xl flex flex-col border border-cyan-500/20 bg-cyan-500/5 relative">
+                    <div class="p-lg border-b border-cyan-500/20 flex justify-between items-center">
+                        <div class="flex items-center gap-md">
+                            <span class="material-symbols-outlined text-cyan-400" data-icon="smart_toy">smart_toy</span>
+                            <h2 class="font-h2-tech text-h2-tech text-lg uppercase tracking-widest">Sentinel AI Engine
+                            </h2>
+                        </div>
+                        <span class="material-symbols-outlined text-cyan-400 animate-pulse"
+                            data-icon="monitoring">monitoring</span>
+                    </div>
+                    <div class="p-lg flex-1 font-terminal-code text-terminal-code space-y-md">
+                        <div class="flex flex-col gap-xs">
+                            <div class="text-cyan-400/60 uppercase text-[10px] font-bold">Current Analysis</div>
+                            <div id="aiAttack" class="text-cyan-400 text-lg">--</div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-md">
+                            <div class="bg-white/5 p-md border border-white/5 rounded">
+                                <div class="text-[10px] text-slate-500 uppercase font-bold mb-1">Severity</div>
+                                <div id="aiSeverity" class="text-error font-bold">--</div>
+                            </div>
+                            <div class="bg-white/5 p-md border border-white/5 rounded">
+                                <div class="text-[10px] text-slate-500 uppercase font-bold mb-1">Confidence</div>
+                                <div id="aiConfidence" class="text-cyan-400 font-bold">--</div>
+                            </div>
+                        </div>
+                        <div id="aiReason"
+                            class="p-md bg-slate-950/50 rounded border-l-2 border-cyan-400 text-slate-300">
+                            <span class="text-cyan-400">&gt; REASONING:</span> --
+                        </div>
+
+                    </div>
+                </div>
+                <!-- Live Packet Logs -->
+                <div class="lg:col-span-7 glass-panel rounded-xl flex flex-col overflow-hidden">
+                    <div class="p-lg border-b border-white/5 flex justify-between items-center">
+                        <div class="flex items-center gap-md">
+                            <span class="material-symbols-outlined text-slate-400"
+                                data-icon="view_list">view_list</span>
+                            <h2 class="font-h2-tech text-h2-tech text-lg">Live Packet Inspection Logs</h2>
+                        </div>
+                        <span class="text-[10px] text-slate-500 font-bold">120 PKTS/SEC</span>
+                    </div>
+                    <div class="flex-1 overflow-y-auto max-h-[300px] font-terminal-code text-[12px]">
+                        <table class="w-full text-left">
+                            <thead
+                                class="sticky top-0 bg-surface-container-low text-slate-500 uppercase text-[10px] font-bold">
+                                <tr>
+                                    <th class="p-md">TIMESTAMP</th>
+                                    <th class="p-md">SOURCE IP</th>
+                                    <th class="p-md">PROTO</th>
+                                    <th class="p-md">ATTACK</th>
+                                    <th class="p-md">STATUS</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logTable" class="divide-y divide-white/5"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- Firewall Policies & Quarantined Threats -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-lg">
+                <!-- Firewall Policies Table -->
+                <div class="lg:col-span-9 glass-panel rounded-xl overflow-hidden">
+                    <div class="p-lg border-b border-white/5 flex justify-between items-center">
+                        <div class="flex items-center gap-md">
+                            <span class="material-symbols-outlined text-cyan-400" data-icon="policy">policy</span>
+                            <h2 class="font-h2-tech text-h2-tech text-lg">Firewall Policies</h2>
+                        </div>
+                        
+                    </div>
+                    <div class="overflow-x-auto font-body-sm">
+                        <table class="w-full text-left">
+                            <thead class="bg-white/5 text-slate-500 text-[10px] font-bold uppercase">
+                                <tr>
+                                    <th class="p-lg">RULE ID</th>
+                                    <th class="p-lg">TYPE</th>
+                                    <th class="p-lg">SOURCE</th>
+                                    <th class="p-lg">DESTINATION</th>
+                                    <th class="p-lg">PROTO/PORT</th>
+                                    <th class="p-lg">ACTION</th>
+                                    <th class="p-lg">REASON</th>
+                                    <th class="p-lg">STATUS</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rulesTable" class="divide-y divide-white/5 text-sm"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- Recently Quarantined Threats -->
+                <div class="lg:col-span-3 glass-panel rounded-xl p-lg flex flex-col border border-error/20">
+                    <div class="flex items-center gap-md mb-lg">
+                        <span class="material-symbols-outlined text-error"
+                            data-icon="health_and_safety">health_and_safety</span>
+                        <h2 class="font-h2-tech text-h2-tech text-lg">Active Threats</h2>
+                    </div>
+                    <div id="blockedIPs" class="space-y-md flex-1"></div>
+
+                </div>
             </div>
         </div>
-
-        <!-- Timeline -->
-        <div class="bg-slate-900 p-4 rounded md:col-span-2">
-            <h3 class="mb-2 text-sm font-semibold">Attack Frequency (24h)</h3>
-            <div class="relative h-48">
-                <canvas id="timelineChart"></canvas>
+        <!-- Footer / Global Status -->
+        <footer
+            class="h-10 bg-slate-950/80 backdrop-blur-md border-t border-white/5 flex items-center px-lg justify-between text-[10px] text-slate-500 font-mono tracking-wider">
+            <div class="flex gap-lg">
+                <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span> CPU:
+                    12%</span>
+                <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span> RAM:
+                    4.2GB / 16GB</span>
+                <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span> UPTIME:
+                    32D 4H 12M</span>
             </div>
-        </div>
+            <div>VER: 4.2.0-STABLE-CYBER</div>
+        </footer>
+    </main>
 
-    </div>
+    <!--javascript-->
+    <script>
+        function getTopAttack(stats) {
+            let maxAttack = null;
+            let maxValue = 0;
 
-    <!-- LOGS -->
-    <div class="bg-slate-900 p-6 rounded">
-        <h3 class="mb-4 font-semibold">Live Traffic Logs</h3>
-        <div id="logs" class="h-64 overflow-y-auto font-mono text-xs space-y-1"></div>
-    </div>
-
-    <!-- RULES -->
-    <div class="bg-slate-900 p-6 rounded">
-        <h3 class="mb-4 font-semibold">Firewall Policies</h3>
-        <table class="w-full text-xs">
-            <thead>
-                <tr class="text-slate-400">
-                    <th>ID</th>
-                    <th>Source</th>
-                    <th>Dest</th>
-                    <th>Protocol</th>
-                    <th>Port</th>
-                    <th>Action</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody id="rulesTable"></tbody>
-        </table>
-    </div>
-
-    <!-- IPS BLOCKS -->
-    <div class="bg-slate-900 p-6 rounded">
-        <h3 class="mb-4 font-semibold">Active IPS Blocks</h3>
-        <div id="blockedList" class="space-y-2"></div>
-    </div>
-
-</main>
-
-<script>
-let attackChart;
-let timelineChart;
-
-function initCharts() {
-
-    attackChart = new Chart(document.getElementById("attackChart"), {
-        type: 'doughnut',
-        data: {
-            labels: [],
-            datasets: [{
-                data: [],
-                backgroundColor: ['#ef4444', '#3b82f6', '#a855f7', '#f59e0b'],
-                borderColor: '#0f172a',
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'top',
-                    labels: { color: '#cbd5e1', font: { size: 10 } }
+            for (let key in stats) {
+                if (stats[key] > maxValue) {
+                    maxValue = stats[key];
+                    maxAttack = key;
                 }
             }
-        }
-    });
 
-    timelineChart = new Chart(document.getElementById("timelineChart"), {
-        type: 'bar',
-        data: {
-            labels: [],
-            datasets: [{
-                label: "Attacks",
-                data: [],
-                backgroundColor: '#3b82f6'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { labels: { color: '#cbd5e1', font: { size: 10 } } }
-            },
-            scales: {
-                x: {
-                    ticks: { color: '#cbd5e1' },
-                    grid: { color: '#1e293b' }
-                },
-                y: {
-                    ticks: { color: '#cbd5e1' },
-                    grid: { color: '#1e293b' }
+            return maxAttack || "UNKNOWN";
+        }
+        async function fetchDashboardData() {
+            const res = await fetch("/api/dashboard-data");
+            const data = await res.json();
+            console.log("ATTACK STATS:", data.attack_stats);
+            console.log("API DATA:", data);
+            updateStats(data);
+            updateLogs(data.logs);
+            updateBlockedIPs(data.blocked_ips);
+            updateThreatLevel(data.threat_level);
+            updateAI(data.attack_stats);
+            checkAlerts(data);
+            updateMap(data.blocked_ips);
+            updateLatestEvent(data.blocked_ips);
+            flashLatestEvent();
+            updateAttackDistribution(data.attack_stats);
+            updateBehavior(data.attack_stats);
+            updateRules(data.rules);
+        }
+        function updateTime() {
+            const now = new Date();
+
+            // Convert to IST manually (+5:30)
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const istTime = new Date(utc + (5.5 * 60 * 60 * 1000));
+
+            const hours = String(istTime.getHours()).padStart(2, '0');
+            const minutes = String(istTime.getMinutes()).padStart(2, '0');
+            const seconds = String(istTime.getSeconds()).padStart(2, '0');
+
+            document.getElementById("liveTime").innerText =
+                `IST ${hours}:${minutes}:${seconds}`;
+        }
+
+        updateTime();
+        setInterval(updateTime, 1000);
+        // refresh every 2 sec
+        //setInterval(fetchDashboardData, 2000);
+        fetchDashboardData();
+
+        function updateStats(data) {
+            document.getElementById("packetCount").innerText = data.packet_count;
+            document.getElementById("blockedCount").innerText = data.blocked_count;
+
+            const total = Object.values(data.attack_stats || {})
+                .reduce((a, b) => a + b, 0);
+
+            document.getElementById("attackCount").innerText = total;
+
+            const threatEl = document.getElementById("threatLevel");
+            threatEl.innerText = data.threat_level;
+
+            if (data.threat_level === "CRITICAL") threatEl.style.color = "red";
+            else if (data.threat_level === "HIGH") threatEl.style.color = "orange";
+            else if (data.threat_level === "MEDIUM") threatEl.style.color = "yellow";
+            else threatEl.style.color = "lime";
+        }
+
+        let currentAttack = null;
+
+        function simulate(type) {
+            fetch(`/api/simulate/${type}`)
+                .then(res => res.json())
+                .then(data => {
+
+                    currentAttack = data.status;   // 🔥 STORE LAST ATTACK
+
+                    fetchDashboardData();
+                });
+        }
+        function updateLogs(logs) {
+            const table = document.getElementById("logTable");
+            table.innerHTML = "";
+
+            logs.slice().reverse().forEach(log => {
+
+                const parts = log.split("|");
+
+                const time = parts[0]?.trim() || "";
+                const level = parts[1]?.trim() || "";
+                const message = parts.slice(2).join("|").trim();
+
+                // 🔥 Extract IP
+                const ipMatch = message.match(/\b\d+\.\d+\.\d+\.\d+\b/);
+                const ip = ipMatch ? ipMatch[0] : "Unknown";
+
+                // 🔥 Extract attack
+                let attack = "NORMAL";
+
+                if (message.includes("SQL")) attack = "SQL_INJECTION";
+                else if (message.includes("XSS")) attack = "XSS";
+                else if (message.includes("TRAVERSAL")) attack = "PATH_TRAVERSAL";
+                else if (message.includes("DDOS") || message.includes("FLOOD")) attack = "DDOS";
+
+                // 🔥 Status
+                let status = "OK";
+                if (message.includes("BLOCK")) status = "BLOCKED";
+                else if (level.includes("WARNING")) status = "WARNING";
+
+                const row = document.createElement("tr");
+
+                // 🔥 Row highlight logic
+                if (status === "BLOCKED") {
+                    row.classList.add("bg-red-900/30", "border-l-4", "border-red-500");
+                } else if (status === "WARNING") {
+                    row.classList.add("bg-yellow-900/20", "border-l-4", "border-yellow-400");
+                } else {
+                    row.classList.add("hover:bg-white/5");
                 }
+
+                row.innerHTML = `
+    <td class="p-md">${time}</td>
+    <td class="p-md text-cyan-400">${ip}</td>
+    <td class="p-md">TCP</td>
+    <td class="p-md text-purple-400">${attack}</td>
+    <td class="p-md ${status === "BLOCKED" ? "text-red-400" : "text-yellow-400"}">${status}</td>
+`;
+
+                table.appendChild(row);
+            });
+        }
+
+
+
+        function updateBlockedIPs(list) {
+            const container = document.getElementById("blockedIPs");
+
+            container.innerHTML = "";
+
+            list.forEach(item => {
+                const div = document.createElement("div");
+
+                div.className = "p-md bg-red-950/20 border border-error/10 rounded-lg flex justify-between items-center";
+
+                div.innerHTML = `
+            <div>
+                <div class="text-[12px] font-mono text-error">${item.ip}</div>
+                <div class="text-[10px] text-slate-500 uppercase font-bold">${item.reason}</div>
+            </div>
+        `;
+
+                container.appendChild(div);
+            });
+        }
+        function updateRules(rules) {
+
+            const table = document.getElementById("rulesTable");
+
+            if (!table) return;
+
+            table.innerHTML = "";
+
+            rules.forEach(rule => {
+
+                const row = document.createElement("tr");
+                row.className = "hover:bg-white/5";
+                const type = rule.source ? "AI" : "MANUAL";
+                row.innerHTML = `
+            <td class="p-lg text-slate-500 font-mono">${rule.id}</td>
+            <td class="p-lg text-xs ${type === "AI" ? "text-red-400" : "text-cyan-400"
+                    }">
+                     ${type}
+                </td>
+
+            <td class="p-lg">
+                ${rule.source || rule.source_zone || "ANY"}
+            </td>
+
+            <td class="p-lg">
+                ${rule.destination || rule.dest_zone || "ANY"}
+            </td>
+
+            <td class="p-lg">
+                <span class="bg-cyan-400/10 text-cyan-400 px-2 py-1 rounded text-xs">
+                    ${rule.protocol || "ANY"} / ${rule.port || "ANY"}
+                </span>
+            </td>
+
+            <td class="p-lg">
+                <span class="${rule.action === 'DROP' ? 'text-error' : 'text-cyan-400'} font-bold">
+                    ${rule.action}
+                </span>
+            </td>
+
+            <td class="p-lg text-orange-400 font-mono">
+                    ${rule.reason || "-"}
+                </td>
+
+            <td class="p-lg">
+                <div class="w-10 h-5 rounded-full relative border ${rule.enabled ? 'bg-cyan-900/40 border-cyan-400/50' : 'bg-white/5 border-white/20'
+                    }">
+                    <div class="absolute top-1 w-3 h-3 rounded-full ${rule.enabled ? 'right-1 bg-cyan-400' : 'left-1 bg-white/20'
+                    }"></div>
+                </div>
+            </td>
+        `;
+                const toggle = row.querySelector(".w-10");
+                if (toggle) {
+                    toggle.onclick = async () => {
+                        await fetch(`/api/toggle-rule/${rule.id}`, {
+                            method: "POST"
+                        });
+
+                        // 🔥 refresh dashboard instantly
+                        fetchDashboardData();
+                    };
+                }
+
+                table.appendChild(row);
+            });
+        }
+        function updateLatestEvent(blockedIPs) {
+
+            if (!blockedIPs || blockedIPs.length === 0) return;
+
+            // get latest blocked IP
+            const latest = blockedIPs[blockedIPs.length - 1];
+
+            // 🔥 fake geo mapping (for demo)
+            const fakeLocations = [
+                "Moscow, RU",
+                "Beijing, CN",
+                "New York, US",
+                "Berlin, DE",
+                "Seoul, KR",
+                "Tokyo, JP"
+            ];
+
+            const randomLocation = fakeLocations[
+                Math.floor(Math.random() * fakeLocations.length)
+            ];
+
+            document.getElementById("latestIP").innerText = `IP: ${latest.ip}`;
+            document.getElementById("latestLocation").innerText = `Origin: ${randomLocation}`;
+        }
+
+        function flashLatestEvent() {
+            const box = document.getElementById("latestIP");
+
+            box.classList.add("text-red-500");
+
+            setTimeout(() => {
+                box.classList.remove("text-red-500");
+            }, 500);
+        }
+
+        function updateMap(blockedIPs) {
+            const map = document.getElementById("threatMap");
+
+            if (!map) return;  // 🔥 prevents crash
+
+            map.innerHTML = "";
+
+            blockedIPs.forEach(item => {
+                const dot = document.createElement("div");
+
+                dot.className = "absolute w-3 h-3 bg-red-500 rounded-full animate-ping";
+
+                dot.style.top = Math.random() * 90 + "%";
+                dot.style.left = Math.random() * 90 + "%";
+
+                map.appendChild(dot);
+            });
+
+            // update latest event panel
+            if (blockedIPs.length > 0) {
+                document.getElementById("latestIP").innerText = "IP: " + blockedIPs[0].ip;
+                document.getElementById("latestLocation").innerText = "Origin: Unknown";
             }
         }
-    });
-}
 
-async function loadData() {
-    const res = await fetch("/api/dashboard-data");
-    const data = await res.json();
+        function updateThreatLevel(level) {
+            const el = document.getElementById("threatLevel");
 
-    document.getElementById("packetCount").innerText = data.packet_count;
-    document.getElementById("blockedCount").innerText = data.blocked_count;
+            el.innerText = level;
 
-    const totalAttacks = Object.values(data.attack_stats).reduce((a, b) => a + b, 0);
-    document.getElementById("attackCount").innerText = totalAttacks;
-    document.getElementById("timestamp").innerText = data.timestamp;
+            if (level === "CRITICAL") el.style.color = "red";
+            else if (level === "HIGH") el.style.color = "orange";
+            else if (level === "MEDIUM") el.style.color = "yellow";
+            else el.style.color = "lime";
+        }
 
-    document.getElementById("threatLevel").innerText = data.threat_level;
+        let lastCount = 0;
 
-    attackChart.data.labels = Object.keys(data.attack_stats);
-    attackChart.data.datasets[0].data = Object.values(data.attack_stats);
-    attackChart.update();
+        function checkAlerts(data) {
+            const total = Object.values(data.attack_stats || {})
+                .reduce((a, b) => a + b, 0);
 
-    timelineChart.data.labels = data.timeline.labels;
-    timelineChart.data.datasets[0].data = data.timeline.values;
-    timelineChart.update();
-}
+            if (currentAttack) {
+                showPopup(`🚨 ${currentAttack} DETECTED`);
+            }
 
-initCharts();
-setInterval(loadData, 2000);
-loadData();
-</script>
+            lastCount = total;
+        }
+        function updateAttackDistribution(stats) {
 
+            const ddos = stats["DDOS"] || 0;
+            const sql = stats["SQL_INJECTION"] || 0;
+            const xss = stats["XSS"] || 0;
+            const path = stats["PATH_TRAVERSAL"] || 0;
+
+            const total = ddos + sql + xss + path;
+
+            document.getElementById("attackTotal").innerText = total;
+
+            if (total === 0) return;
+
+            document.getElementById("ddosPercent").innerText = Math.round(ddos / total * 100) + "%";
+            document.getElementById("sqlPercent").innerText = Math.round(sql / total * 100) + "%";
+            document.getElementById("xssPercent").innerText = Math.round(xss / total * 100) + "%";
+            document.getElementById("pathPercent").innerText = Math.round(path / total * 100) + "%";
+        }
+
+        function showPopup(msg) {
+            const div = document.createElement("div");
+
+            div.className = "fixed top-5 right-5 bg-red-600 px-6 py-3 rounded text-white shadow-lg z-50 animate-pulse";
+            div.innerText = msg;
+
+            document.body.appendChild(div);
+
+            setTimeout(() => div.remove(), 3000);
+        }
+        function updateBehavior(stats) {
+
+            const ddos = stats["DDOS"] || 0;
+            const sql = stats["SQL_INJECTION"] || 0;
+            const xss = stats["XSS"] || 0;
+            const path = stats["PATH_TRAVERSAL"] || 0;
+
+            // 🔥 Map behavior to attacks
+            const rate = Math.min(ddos * 10, 100);
+            const burst = Math.min(sql * 10, 100);
+            const proto = Math.min((xss + path) * 10, 100);
+
+            document.getElementById("rateBar").style.width = rate + "%";
+            document.getElementById("burstBar").style.width = burst + "%";
+            document.getElementById("protoBar").style.width = proto + "%";
+        }
+
+        function updateAI(stats) {
+
+            if (!currentAttack) return;
+
+            document.getElementById("aiAttack").innerText = currentAttack;
+            document.getElementById("aiSeverity").innerText = "HIGH";
+            document.getElementById("aiConfidence").innerText = "90%";
+
+            document.getElementById("aiReason").innerHTML = `
+        <span class="text-cyan-400">&gt; REASONING:</span>
+        ${currentAttack} attack detected based on simulation trigger and anomaly correlation.
+    `;
+        }
+    </script>
 </body>
+
 </html>

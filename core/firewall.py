@@ -17,7 +17,8 @@ from core.ai_agent import generate_rule_from_ai
 # =========================================
 # CONFIG
 # =========================================
-
+PACKET_COUNT = 0
+ATTACK_STATS = {}
 logging.basicConfig(
     filename="logs/events.log",
     level=logging.INFO,
@@ -111,6 +112,9 @@ def ai_decision(payload, src_ip):
     severity = ai_result.get("severity", "LOW")
     confidence = int(ai_result.get("confidence", 50))
 
+    attack_type = ai_result.get("attack_type", "UNKNOWN")
+    ATTACK_STATS[attack_type] = ATTACK_STATS.get(attack_type, 0) + 1
+
     # 🔥 Agent creates rules
     agent_msg = generate_rule_from_ai(ai_result, src_ip)
     logging.info(agent_msg)
@@ -158,6 +162,8 @@ def get_threat_level(ip):
 # =========================================
 
 def process_packet_data(src_ip, dst_ip, protocol, port, payload="", tcp_flags=None):
+    global PACKET_COUNT
+    PACKET_COUNT += 1
 
     # 0️⃣ WHITELIST
     if is_whitelisted(src_ip):
@@ -171,7 +177,8 @@ def process_packet_data(src_ip, dst_ip, protocol, port, payload="", tcp_flags=No
 
     # 2️⃣ BLOCK CHECK
     if is_blocked(src_ip):
-        logging.warning(f"[BLOCKED TRAFFIC] {src_ip}")
+        if random.random() < 0.1:  
+            logging.warning(f"[BLOCKED TRAFFIC] {src_ip}")
         return
 
     update_session(src_ip, dst_ip, port)
@@ -192,7 +199,7 @@ def process_packet_data(src_ip, dst_ip, protocol, port, payload="", tcp_flags=No
         logging.warning(f"[IDS] {ids_alert} from {src_ip}")
         record_attack(src_ip, ids_alert)
         increase_threat_score(src_ip, 2, ids_alert)
-
+        ATTACK_STATS[ids_alert] = ATTACK_STATS.get(ids_alert, 0) + 1
     # ---------------------------
     # 5️⃣ DPI
     # ---------------------------
@@ -202,7 +209,7 @@ def process_packet_data(src_ip, dst_ip, protocol, port, payload="", tcp_flags=No
         logging.warning(f"[DPI] {dpi_alert} from {src_ip}")
         record_attack(src_ip, dpi_alert)
         increase_threat_score(src_ip, 3, dpi_alert)
-
+        ATTACK_STATS[dpi_alert] = ATTACK_STATS.get(dpi_alert, 0) + 1
         # 🔥 AI layer
         ai_decision(payload, src_ip)
 
