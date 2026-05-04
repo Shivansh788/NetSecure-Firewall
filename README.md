@@ -1,259 +1,320 @@
-🔥 NetSecure Firewall
-AI-Powered Intelligent Firewall with IDS, IPS, Zero-Day Detection & Agentic Defense
-⚙️ Installation & Setup
-1️⃣ Create Virtual Environment
+# 🔥 NetSecure Firewall
+
+### AI-Powered Intelligent Firewall with IDS, IPS, Zero-Day Detection & Agentic Defense
+
+---
+
+## ⚙️ Installation & Setup
+
+### 1️⃣ Create Virtual Environment
 python -m venv myenv
-2️⃣ Activate Environment
-.\myenv\Scripts\Activate.ps1   # Windows
-source myenv/bin/activate      # Linux/Mac
-3️⃣ Install Dependencies
+
+### 2️⃣ Activate Environment
+.\myenv\Scripts\Activate.ps1   # Windows  
+source myenv/bin/activate      # Linux/Mac  
+
+### 3️⃣ Install Dependencies
 pip install -r requirements.txt
-4️⃣ Run the Firewall
+
+### 4️⃣ Run the Firewall
 python run.py
-📌 Overview
 
-NetSecure Firewall is an advanced Next-Generation Firewall (NGFW) that combines:
+---
 
-🔐 Firewall (Zone-Based + Zero Trust)
-🔍 Intrusion Detection System (IDS)
-🚫 Intrusion Prevention System (IPS)
-🧠 AI Threat Analysis
-🤖 Agentic Rule Generation
-📊 Behavioral & Anomaly Detection
-🌐 Real-time Dashboard
+## 📌 Overview
+
+NetSecure Firewall is an advanced Next-Generation Firewall (NGFW) that integrates:
+
+- Firewall (Zone-Based + Zero Trust)
+- Intrusion Detection System (IDS)
+- Intrusion Prevention System (IPS)
+- AI Threat Analysis
+- Agentic Rule Generation
+- Behavioral & Anomaly Detection
+- Real-time Dashboard
 
 Unlike traditional firewalls, NetSecure is:
+- Adaptive
+- Explainable
+- AI-driven
+- Interactive (Simulation-enabled)
 
-👉 Adaptive
-👉 Explainable
-👉 AI-driven
-👉 Interactive (Simulation-enabled)
+---
 
-🚀 Core Features
-🔐 1. Zero Trust Zone-Based Firewall
-Default policy: DROP (deny all)
-Zone-based filtering:
-PUBLIC
-INTERNAL
-RESTRICTED
-Traffic evaluated using:
-Source Zone
-Destination Zone
-Protocol + Port
-Real-time rule enforcement
+## 🚀 Core Features
 
-👉 Now visualized in dashboard (source → destination flow)
+---
 
-🔍 2. IDS (Intrusion Detection System)
+### 🔐 1. Zero Trust Zone-Based Firewall
 
-Detects known attacks using signature-based analysis:
+- Default policy: DROP (deny all)
+- Zones:
+  - PUBLIC
+  - INTERNAL
+  - RESTRICTED
+- Traffic filtering based on:
+  - Source Zone
+  - Destination Zone
+  - Protocol & Port
+- Real-time enforcement
 
-SQL Injection
-Cross-Site Scripting (XSS)
-Path Traversal
-Large Payload Attacks
-🧠 3. Deep Packet Inspection (DPI)
+---
 
-Analyzes payload content to detect hidden threats:
+### 🔍 2. Intrusion Detection System (IDS)
 
-Malicious queries
-Script injections
-Encoded attacks
-File system traversal attempts
-🤖 4. AI-Powered Threat Analysis
-Uses AI to classify threats
-Outputs:
-Attack Type
-Severity (LOW → CRITICAL)
-Confidence Score
-Reasoning (Explainable AI)
-⚡ 5. Intrusion Prevention System (IPS)
-Threat scoring per IP
-Automatic blocking on threshold
-Temporary blocking (auto-expiry)
-Rate limiting & flood detection
-🧬 6. Behavioral & Zero-Day Detection
+Detects known attacks:
 
-Detects unknown attacks (Zero-Day) using anomaly patterns:
+- SQL Injection
+- Cross-Site Scripting (XSS)
+- Path Traversal
+- Large Payload Attacks
 
-High request bursts
-Abnormal payload size
-Traffic spikes
-Unknown signatures
+---
 
-👉 If no known signature is matched:
+### 🧠 3. Deep Packet Inspection (DPI)
 
-→ Marked as ZERO_DAY
-→ AI generates rule
-→ Traffic blocked
-🤖 7. Agentic AI Rule Generation
-Automatically creates firewall rules
-Adapts based on:
-Attack severity
-Confidence
-Frequency
-Prevents duplicate rules
-Uses TTL (auto-expiry)
-🔄 8. Dynamic Rule Management
-AI + Manual rules coexist
-Enable/disable rules from UI
-Real-time toggle updates backend
-Rule conflict detection
-Rule deduplication system
-🎮 9. Attack Simulation Engine (NEW 🔥)
+- Payload inspection
+- Detects hidden threats
+- Application-layer attack detection
 
-Allows real-time demonstration:
+---
 
-SQL Injection
-XSS
-Path Traversal
-DDoS
-Zero-Day simulation
+### ⚡ 4. Intrusion Prevention System (IPS)
 
-👉 Each simulation:
+- Threat scoring per IP
+- Automatic blocking
+- Temporary block with expiry
+- Rate limiting & flood detection
 
-Updates dashboard
-Generates logs
-Triggers AI
-Creates firewall rules
-📊 10. Real-Time Interactive Dashboard (MAJOR FEATURE)
+---
+
+### 🧬 5. Behavioral & Zero-Day Detection
+
+Detects unknown attacks using anomaly patterns:
+
+- Traffic spikes
+- Abnormal payload size
+- Unknown patterns
+
+If no signature is matched:
+
+→ Marked as ZERO_DAY  
+→ AI generates rule  
+→ Traffic blocked  
+
+---
+
+### 🤖 6. AI-Powered Threat Analysis
+
+AI outputs:
+
+- Attack Type
+- Severity
+- Confidence
+- Reasoning
+
+---
+
+### 🤖 7. Agentic AI Rule Generation
+
+- Automatic rule creation
+- Based on:
+  - Severity
+  - Confidence
+  - Frequency
+- Duplicate prevention
+- TTL-based expiry
+
+---
+
+### 🔄 8. Dynamic Rule Management
+
+- AI + Manual rules
+- Enable/Disable rules from UI
+- Conflict detection
+- Deduplication
+
+---
+
+### 🎮 9. Attack Simulation Engine
+
+Simulate:
+
+- SQL Injection
+- XSS
+- Path Traversal
+- DDoS
+- Zero-Day Attacks
+
+Each simulation:
+- Updates dashboard
+- Generates logs
+- Triggers AI
+- Creates rules
+
+---
+
+### 📊 10. Real-Time Dashboard
+
 Includes:
-📈 Attack Distribution Chart (dynamic)
-🌍 Threat Map (based on blocked IPs)
-🧠 AI Sentinel Panel (live analysis)
-📜 Live Packet Logs (auto-updating)
-🔥 Popup Alerts on attack detection
-⚙️ Firewall Policy Table (dynamic)
-🚫 Active Threats panel
-🎛️ 11. UI-Controlled Firewall (NEW 🔥)
-Toggle rules ON/OFF directly from UI
-Backend sync using API
-Instant update in dashboard
-Shows:
-Rule Type (AI / MANUAL)
-Reason (attack type)
-Status
-🧠 12. Hybrid Rule System
-Rule Type	Description
-🛡 MANUAL	Zone-based firewall policies
-🌐 AI	Attack-based dynamic rules
-🏗️ System Architecture
-Incoming Traffic
-        ↓
-+----------------------+
-| Zone Firewall Rules  |
-+----------------------+
-        ↓
-+----------------------+
-| IDS Detection        |
-+----------------------+
-        ↓
-+----------------------+
-| DPI Inspection       |
-+----------------------+
-        ↓
-+----------------------+
-| Behavioral Analysis  |
-+----------------------+
-        ↓
-+----------------------+
-| AI Analyzer          |
-+----------------------+
-        ↓
-+----------------------+
-| AI Agent (Rule Gen)  |
-+----------------------+
-        ↓
-+----------------------+
-| IPS Decision Engine  |
-+----------------------+
-        ↓
-   Allow / Block
-📂 Project Structure
+
+- Attack distribution chart
+- Threat map
+- AI Sentinel panel
+- Live logs
+- Popup alerts
+- Firewall policies table
+- Active threats list
+
+---
+
+### 🎛️ 11. UI-Controlled Firewall
+
+- Toggle rules ON/OFF
+- Backend synced
+- Real-time updates
+
+---
+
+### 🧠 12. Hybrid Rule System
+
+| Type   | Description |
+|--------|------------|
+| MANUAL | Zone-based rules |
+| AI     | Attack-based rules |
+
+---
+
+## 🏗️ System Architecture
+
+Incoming Traffic  
+↓  
+Firewall Rules  
+↓  
+IDS Detection  
+↓  
+DPI Inspection  
+↓  
+Behavior Analysis  
+↓  
+AI Analyzer  
+↓  
+AI Agent (Rule Generation)  
+↓  
+IPS Decision Engine  
+↓  
+Allow / Block  
+
+---
+
+## 📂 Project Structure
+
 NetSecure_Firewall/
-│
-├── core/
-│   ├── firewall.py
-│   ├── rule_engine.py
-│   ├── ai_agent.py
-│   ├── ai_analyzer.py
-│   ├── ai_parser.py
-│   ├── ids.py
-│   ├── dpi.py
-│   ├── behavior_monitor.py
-│   ├── conflict_detector.py
-│
-├── ui/
-│   ├── app.py
-│
-├── config/
-│   └── rules.json
-│
-├── logs/
-│   └── events.log
-│
-├── run.py
-├── requirements.txt
-└── README.md
-🧪 Simulation Workflow
-Click Attack Button
-        ↓
-Simulation API Trigger
-        ↓
-Stats + Logs Updated
-        ↓
-AI Triggered
-        ↓
-Rule Generated
-        ↓
-UI Updated (Realtime)
-📊 Logging System
 
-All events stored in:
+core/
+- firewall.py
+- rule_engine.py
+- ai_agent.py
+- ai_analyzer.py
+- ai_parser.py
+- ids.py
+- dpi.py
+- behavior_monitor.py
+- conflict_detector.py
 
+ui/
+- app.py
+
+config/
+- rules.json
+
+logs/
+- events.log
+
+run.py  
+requirements.txt  
+README.md  
+
+---
+
+## 🧪 Simulation Workflow
+
+Click Attack Button  
+↓  
+Simulation API  
+↓  
+Logs & Stats Updated  
+↓  
+AI Triggered  
+↓  
+Rule Generated  
+↓  
+UI Updated  
+
+---
+
+## 📊 Logging
+
+Logs stored in:
 logs/events.log
 
 Includes:
+- IDS alerts
+- DPI detections
+- AI decisions
+- Rule creation
+- Threat levels
 
-IDS alerts
-DPI detections
-AI decisions
-Rule creation
-Threat levels
-Simulation events
-🎯 Project Objectives (ACHIEVED ✔)
+---
 
-✔ Zone-based firewall (Zero Trust)
-✔ IDS + IPS integration
-✔ Deep Packet Inspection
-✔ Behavioral anomaly detection
-✔ Zero-Day attack detection
-✔ AI-driven adaptive rules
-✔ Conflict detection
-✔ Real-time dashboard
+## 🎯 Objectives Achieved
 
-🚀 Advanced Features (Bonus)
-Agentic AI firewall
-Simulation-based demo system
-Hybrid rule architecture
-Explainable AI outputs
-UI-controlled firewall rules
-📈 Future Scope
-Real ML-based anomaly model
-Geo-IP integration (real)
-Distributed firewall clusters
-SIEM integration
-Cloud deployment
-🏁 Conclusion
+- Zone-based firewall (Zero Trust)
+- IDS + IPS integration
+- Deep Packet Inspection
+- Behavioral analysis
+- Zero-Day detection
+- AI-based rule generation
+- Conflict detection
+- Real-time dashboard
 
-NetSecure Firewall demonstrates how modern cybersecurity systems can:
+---
 
-Detect known and unknown threats
-Adapt dynamically using AI
-Provide real-time visibility
-Enforce Zero Trust security
+## 🚀 Advanced Features
 
-It successfully combines:
+- Agentic AI firewall
+- Simulation-based demo
+- Hybrid rule architecture
+- Explainable AI
+- UI-controlled rules
 
-👉 Firewall + IDS + IPS + AI + Behavior + UI
-into a complete Next-Gen Firewall system
+---
+
+## 📈 Future Scope
+
+- ML-based anomaly detection
+- Real Geo-IP blocking
+- Distributed firewall
+- SIEM integration
+- Cloud deployment
+
+---
+
+## 🏁 Conclusion
+
+NetSecure Firewall demonstrates a modern cybersecurity system that:
+
+- Detects known and unknown attacks
+- Adapts dynamically using AI
+- Provides real-time monitoring
+- Enforces Zero Trust security
+
+It integrates:
+
+Firewall + IDS + IPS + AI + Behavior + UI
+
+into a complete Next-Generation Firewall system.
+
+---
+
+## ⭐ Star the repository if you found it useful!
